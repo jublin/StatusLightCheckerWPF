@@ -1,0 +1,33 @@
+﻿<Window x:Class="TeamsStatusChecker.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TeamsStatusChecker"
+        mc:Ignorable="d" 
+        Title="TeamsStatus Checker" Height="350" Width="400">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width=".3*"/>
+            <ColumnDefinition Width=".3*"/>
+            <ColumnDefinition Width=".3*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height=".25*"/>
+            <RowDefinition Height=".25*"/>
+            <RowDefinition Height=".25*"/>
+            <RowDefinition Height=".25*"/>
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Vertical">
+            <Label>COM Port</Label>
+            <TextBox Text="{Binding ComPort}"/>
+            <Button Content="Connect" HorizontalContentAlignment="Center" Command="{Binding ConnectCommand}"/>
+            <Button Content="Disconnect" IsEnabled="{Binding Connected}" Command="{Binding DisconnectCommand}"/>
+        </StackPanel>
+        <ScrollViewer Grid.Row="1" Grid.RowSpan="3" Grid.Column="0" Grid.ColumnSpan="3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <RichTextBox x:Name="LogBox" ScrollViewer.CanContentScroll="True"/>
+        </ScrollViewer>
+
+
+    </Grid>
+</Window>
