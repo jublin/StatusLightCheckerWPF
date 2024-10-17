@@ -1,7 +1,4 @@
-﻿using System.Configuration;
-using System.Data;
-using System.Windows;
-using TeamsStatusChecker.Services;
+﻿using System.Windows;
 
 namespace TeamsStatusChecker
 {

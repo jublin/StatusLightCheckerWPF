@@ -1,20 +1,13 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Expression.Interactivity.Core;
-using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.IO.Ports;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Automation;
 using System.Windows.Threading;
 using TeamsStatusChecker.Configuration;
 using TeamsStatusChecker.Services;
 using Serilog;
 using System.Windows.Controls;
 using System.Windows;
-using System.Data;
+using System.Windows.Media;
+using RJCP.IO.Ports;
 
 namespace TeamsStatusChecker.ViewModels
 {
@@ -22,7 +15,7 @@ namespace TeamsStatusChecker.ViewModels
     {
         public static MainViewModel Instance { get; set; } = new();
 
-        private SerialPort? serialPort;
+        private SerialPortStream? serialPort;
 
         private TeamsStatusAutomationService teamsStatusAutomationService;
 
@@ -39,7 +32,7 @@ namespace TeamsStatusChecker.ViewModels
             {
                 Interval = 5,
                 WindowName = "Microsoft Teams",
-                StatusPattern = "Your profile, status @status"
+                StatusPattern = "Your profile, status @status for"
             };
             Log.Logger = new LoggerConfiguration()
                 .WriteTo.RichTextBox(Application.Current.MainWindow.FindName("LogBox") as RichTextBox)
@@ -49,6 +42,7 @@ namespace TeamsStatusChecker.ViewModels
 
             timer = new DispatcherTimer(TimeSpan.FromSeconds(5), DispatcherPriority.Normal, TimerTick, App.Current.Dispatcher);
             teamsStatusAutomationService = new TeamsStatusAutomationService(cfg, Log.Logger);
+            teamsStatusAutomationService.GetCurrentStatus();
         }
 
         private string comPort = string.Empty;
@@ -58,7 +52,7 @@ namespace TeamsStatusChecker.ViewModels
             set => SetProperty(ref comPort, value);
         }
 
-        private int baudRate;
+        private int baudRate = 115200;
         public int BaudRate
         {
             get => baudRate;
@@ -83,11 +77,18 @@ namespace TeamsStatusChecker.ViewModels
         public bool Connected
         {
             get => connected;
-            set => SetProperty(ref connected, value);
+            set
+            {
+                SetProperty(ref connected, value); 
+                OnPropertyChanged(nameof(ComportButtonText));
+                OnPropertyChanged(nameof(ComPortButtonCommand));
+            }
         }
 
-        public ActionCommand ConnectCommand => new ActionCommand(() => ConnectSerialPort());
-        public ActionCommand DisconnectCommand => new ActionCommand(() => DisconnectSerialPort());
+        public ActionCommand ComPortButtonCommand => Connected ? DisconnectCommand : ConnectCommand;
+
+        private ActionCommand ConnectCommand => new ActionCommand(ConnectSerialPort);
+        private ActionCommand DisconnectCommand => new ActionCommand(DisconnectSerialPort);
 
         private void DisconnectSerialPort()
         {
@@ -95,9 +96,9 @@ namespace TeamsStatusChecker.ViewModels
             teamsStatusAutomationService.StatusChanged -= StatusChangedEvent;
         }
 
-        private void ConnectSerialPort()
+        private async void ConnectSerialPort()
         {
-            serialPort = new SerialPort(ComPort, BaudRate);
+            serialPort = new SerialPortStream(ComPort, BaudRate);
             try
             {
                 serialPort.Open();
@@ -110,45 +111,93 @@ namespace TeamsStatusChecker.ViewModels
             Connected = true;
             
             teamsStatusAutomationService.StatusChanged += StatusChangedEvent;
-            teamsStatusAutomationService.GetCurrentStatus();
+            await teamsStatusAutomationService.GetCurrentStatus();
             timer.Start();
         }
 
-        private void StatusChangedEvent(object? sender, MicrosoftTeamsStatus e)
+        private MicrosoftTeamsStatus lastStatus;
+
+        public MicrosoftTeamsStatus LastStatus
         {
+            get => lastStatus;
+            set => SetProperty(ref lastStatus, value);
+        }
+
+        public string ComportButtonText => Connected ? "Disconnect" : "Connect";
+
+        public SolidColorBrush StatusColor
+        {
+            get
+            {
+                switch (LastStatus)
+                {
+                    case MicrosoftTeamsStatus.Available:
+                        return Brushes.Green;
+                    case MicrosoftTeamsStatus.Busy:
+                        return Brushes.Red;
+                    case MicrosoftTeamsStatus.DoNotDisturb:
+                        return Brushes.DarkRed;
+                    case MicrosoftTeamsStatus.InAMeeting:
+                        return Brushes.Red;
+                    case MicrosoftTeamsStatus.Away:
+                        return Brushes.Yellow;
+                    case MicrosoftTeamsStatus.Offline:
+                        return Brushes.Black;
+                    case MicrosoftTeamsStatus.OutOfOffice:
+                        return Brushes.Purple;
+                    case MicrosoftTeamsStatus.Unknown:
+                    default:
+                        return Brushes.Gray;
+                    
+                }
+            }
+        }
+
+        private async void StatusChangedEvent(object? sender, MicrosoftTeamsStatus e)
+        {
+            serialPort?.DiscardOutBuffer();
+            if(e == LastStatus) return;
+            LastStatus = e;
             switch (e)
             {
                 case MicrosoftTeamsStatus.Available:
-                    serialPort?.Write(TeamsStatusColors.Available.ToArray(), 0, TeamsStatusColors.Available.Count);
+                    await serialPort?.WriteAsync(TeamsStatusColors.Available.ToArray(), 0, TeamsStatusColors.Available.Count);
                     break;
                 case MicrosoftTeamsStatus.Busy:
-                    serialPort?.Write(TeamsStatusColors.Busy.ToArray(), 0, TeamsStatusColors.Busy.Count);
+                    var bytes = TeamsStatusColors.Busy.ToArray();
+                    
+                    await serialPort?.WriteAsync(bytes, 0, TeamsStatusColors.Busy.Count);
                     break;
                 case MicrosoftTeamsStatus.DoNotDisturb:
-                    serialPort?.Write(TeamsStatusColors.Donotdisturb.ToArray(), 0, TeamsStatusColors.Donotdisturb.Count);
+                    await serialPort?.WriteAsync(TeamsStatusColors.Donotdisturb.ToArray(), 0, TeamsStatusColors.Donotdisturb.Count);
                     break;
                 case MicrosoftTeamsStatus.InAMeeting:
-                    serialPort?.Write(TeamsStatusColors.Inameeting.ToArray(), 0, TeamsStatusColors.Inameeting.Count);
+                    await serialPort?.WriteAsync(TeamsStatusColors.Inameeting.ToArray(), 0, TeamsStatusColors.Inameeting.Count);
                     break;
                 case MicrosoftTeamsStatus.Away:
-                    serialPort?.Write(TeamsStatusColors.Away.ToArray(), 0, TeamsStatusColors.Away.Count);
+                    await serialPort?.WriteAsync(TeamsStatusColors.Away.ToArray(), 0, TeamsStatusColors.Away.Count);
                     break;
                 case MicrosoftTeamsStatus.Offline:
-                    serialPort?.Write(TeamsStatusColors.Offline.ToArray(), 0, TeamsStatusColors.Offline.Count);
+                    await serialPort?.WriteAsync(TeamsStatusColors.Offline.ToArray(), 0, TeamsStatusColors.Offline.Count);
                     break;
                 case MicrosoftTeamsStatus.OutOfOffice:
-                    serialPort?.Write(TeamsStatusColors.OutOfOffice.ToArray(), 0, TeamsStatusColors.OutOfOffice.Count);
+                    await serialPort?.WriteAsync(TeamsStatusColors.OutOfOffice.ToArray(), 0, TeamsStatusColors.OutOfOffice.Count);
                     break;
+                case MicrosoftTeamsStatus.Unknown:
+                        await serialPort?.WriteAsync(TeamsStatusColors.Offline.ToArray(), 0, TeamsStatusColors.Offline.Count);
+                        break;
                 default:
                     break;
             }
+
+            await serialPort?.FlushAsync();
         }
     }
     public static class TeamsStatusColors
     {
         public static List<byte> Available => [0, 255, 0];
         public static List<byte> Busy => [255, 0, 0];
-        public static List<byte> Donotdisturb => [255, 2, 2];
+        public static List<byte> Donotdisturb => [234, 26, 2];
         public static List<byte> Inameeting => [255, 0, 0];
         public static List<byte> Away => [194, 194, 4];
         public static List<byte> Offline => [0, 0, 0];
