@@ -15,7 +15,7 @@ namespace TeamsStatusChecker.ViewModels
     {
         public static MainViewModel Instance { get; set; } = new();
 
-        private SerialPortStream? serialPort;
+        public SerialPortStream? SerialPort { get; private set; }
 
         private TeamsStatusAutomationService teamsStatusAutomationService;
 
@@ -92,16 +92,16 @@ namespace TeamsStatusChecker.ViewModels
 
         private void DisconnectSerialPort()
         {
-            serialPort?.Close();
+            SerialPort?.Close();
             teamsStatusAutomationService.StatusChanged -= StatusChangedEvent;
         }
 
         private async void ConnectSerialPort()
         {
-            serialPort = new SerialPortStream(ComPort, BaudRate);
+            SerialPort = new SerialPortStream(ComPort, BaudRate);
             try
             {
-                serialPort.Open();
+                SerialPort.Open();
             }
             catch (Exception ex)
             {
@@ -155,42 +155,42 @@ namespace TeamsStatusChecker.ViewModels
 
         private async void StatusChangedEvent(object? sender, MicrosoftTeamsStatus e)
         {
-            serialPort?.DiscardOutBuffer();
+            SerialPort?.DiscardOutBuffer();
             if(e == LastStatus) return;
             LastStatus = e;
             switch (e)
             {
                 case MicrosoftTeamsStatus.Available:
-                    await serialPort?.WriteAsync(TeamsStatusColors.Available.ToArray(), 0, TeamsStatusColors.Available.Count);
+                    await SerialPort?.WriteAsync(TeamsStatusColors.Available.ToArray(), 0, TeamsStatusColors.Available.Count);
                     break;
                 case MicrosoftTeamsStatus.Busy:
                     var bytes = TeamsStatusColors.Busy.ToArray();
                     
-                    await serialPort?.WriteAsync(bytes, 0, TeamsStatusColors.Busy.Count);
+                    await SerialPort?.WriteAsync(bytes, 0, TeamsStatusColors.Busy.Count);
                     break;
                 case MicrosoftTeamsStatus.DoNotDisturb:
-                    await serialPort?.WriteAsync(TeamsStatusColors.Donotdisturb.ToArray(), 0, TeamsStatusColors.Donotdisturb.Count);
+                    await SerialPort?.WriteAsync(TeamsStatusColors.Donotdisturb.ToArray(), 0, TeamsStatusColors.Donotdisturb.Count);
                     break;
                 case MicrosoftTeamsStatus.InAMeeting:
-                    await serialPort?.WriteAsync(TeamsStatusColors.Inameeting.ToArray(), 0, TeamsStatusColors.Inameeting.Count);
+                    await SerialPort?.WriteAsync(TeamsStatusColors.Inameeting.ToArray(), 0, TeamsStatusColors.Inameeting.Count);
                     break;
                 case MicrosoftTeamsStatus.Away:
-                    await serialPort?.WriteAsync(TeamsStatusColors.Away.ToArray(), 0, TeamsStatusColors.Away.Count);
+                    await SerialPort?.WriteAsync(TeamsStatusColors.Away.ToArray(), 0, TeamsStatusColors.Away.Count);
                     break;
                 case MicrosoftTeamsStatus.Offline:
-                    await serialPort?.WriteAsync(TeamsStatusColors.Offline.ToArray(), 0, TeamsStatusColors.Offline.Count);
+                    await SerialPort?.WriteAsync(TeamsStatusColors.Offline.ToArray(), 0, TeamsStatusColors.Offline.Count);
                     break;
                 case MicrosoftTeamsStatus.OutOfOffice:
-                    await serialPort?.WriteAsync(TeamsStatusColors.OutOfOffice.ToArray(), 0, TeamsStatusColors.OutOfOffice.Count);
+                    await SerialPort?.WriteAsync(TeamsStatusColors.OutOfOffice.ToArray(), 0, TeamsStatusColors.OutOfOffice.Count);
                     break;
                 case MicrosoftTeamsStatus.Unknown:
-                        await serialPort?.WriteAsync(TeamsStatusColors.Offline.ToArray(), 0, TeamsStatusColors.Offline.Count);
+                        await SerialPort?.WriteAsync(TeamsStatusColors.Offline.ToArray(), 0, TeamsStatusColors.Offline.Count);
                         break;
                 default:
                     break;
             }
 
-            await serialPort?.FlushAsync();
+            await SerialPort?.FlushAsync();
         }
     }
     public static class TeamsStatusColors

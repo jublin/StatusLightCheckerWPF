@@ -12,6 +12,14 @@ namespace TeamsStatusChecker
         {
             
         }
+        
+        protected override async void OnExit(ExitEventArgs e)
+        {
+            await MainViewModel.Instance?.SerialPort?.WriteAsync(TeamsStatusColors.Offline.ToArray(), 0, TeamsStatusColors.Offline.Count)!;
+            await Task.Delay(1000);
+            MainViewModel.Instance?.SerialPort?.Close();
+            base.OnExit(e);
+        }
     }
 
 }
