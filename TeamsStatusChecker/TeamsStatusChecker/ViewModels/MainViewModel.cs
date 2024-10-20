@@ -120,7 +120,10 @@ namespace TeamsStatusChecker.ViewModels
         public MicrosoftTeamsStatus LastStatus
         {
             get => lastStatus;
-            set => SetProperty(ref lastStatus, value);
+            set { 
+                    SetProperty(ref lastStatus, value);
+                    OnPropertyChanged(nameof(StatusColor));
+                }
         }
 
         public string ComportButtonText => Connected ? "Disconnect" : "Connect";
