@@ -1,7 +1,9 @@
 ﻿using System.Windows;
+using TeamsStatusChecker.ViewModels;
 
 namespace TeamsStatusChecker
 {
+    internal delegate void StatusChangedEventHandler();
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
@@ -15,7 +17,8 @@ namespace TeamsStatusChecker
         
         protected override async void OnExit(ExitEventArgs e)
         {
-            await MainViewModel.Instance?.SerialPort?.WriteAsync(TeamsStatusColors.Offline.ToArray(), 0, TeamsStatusColors.Offline.Count)!;
+            await MainViewModel.Instance?.SerialPort?.WriteAsync([0,0,0], 0, 3)!;
+            await MainViewModel.Instance?.SerialPort?.FlushAsync()!;
             await Task.Delay(1000);
             MainViewModel.Instance?.SerialPort?.Close();
             base.OnExit(e);
