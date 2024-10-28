@@ -3,7 +3,7 @@ using TeamsStatusChecker.ViewModels;
 
 namespace TeamsStatusChecker
 {
-    internal delegate void StatusChangedEventHandler();
+    public delegate void StatusChangedEventHandler();
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
