@@ -1,7 +1,7 @@
 ﻿using System.Windows;
-using TeamsStatusChecker.ViewModels;
+using StatusLightChecker.ViewModels;
 
-namespace TeamsStatusChecker
+namespace StatusLightChecker
 {
     public delegate void StatusChangedEventHandler();
     /// <summary>

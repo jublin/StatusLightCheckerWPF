@@ -1,15 +1,15 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using Microsoft.Expression.Interactivity.Core;
-using System.Windows.Threading;
-using Serilog;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows;
 using System.Windows.Media;
+using System.Windows.Threading;
+using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Expression.Interactivity.Core;
 using RJCP.IO.Ports;
-using TeamsStatusChecker.Enumerations;
-using TeamsStatusChecker.StatusCheckers;
+using Serilog;
+using StatusLightChecker.Enumerations;
+using StatusLightChecker.StatusCheckers;
 
-namespace TeamsStatusChecker.ViewModels;
+namespace StatusLightChecker.ViewModels;
 
 internal class MainViewModel : ObservableObject
 {
@@ -18,7 +18,6 @@ internal class MainViewModel : ObservableObject
     public SerialPortStream? SerialPort { get; private set; }
 
     private TeamsApplicationStatusChecker? teamsApplicationStatusChecker;
-    private SlackStatusChecker? slackStatusChecker;
     
     private readonly StatusChangedEventHandler statusChangedEventHandler;
 
@@ -100,6 +99,21 @@ internal class MainViewModel : ObservableObject
         }
     }
 
+    private bool showLog;
+
+    public bool ShowLog
+    {
+        get => showLog;
+        set
+        {
+            SetProperty(ref showLog, value);
+            OnPropertyChanged(nameof(ShowLogText));
+        }
+    }
+
+    public string ShowLogText => ShowLog ? "Hide Log" : "Show Log";
+ 
+    
     public ActionCommand ComPortButtonCommand => Connected ? DisconnectCommand : ConnectCommand;
 
     private ActionCommand ConnectCommand => new(ConnectSerialPort);

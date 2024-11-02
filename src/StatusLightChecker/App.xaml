@@ -1,7 +1,6 @@
-﻿<Application x:Class="TeamsStatusChecker.App"
+﻿<Application x:Class="StatusLightChecker.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:TeamsStatusChecker"
              StartupUri="MainWindow.xaml"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
     <Application.Resources>

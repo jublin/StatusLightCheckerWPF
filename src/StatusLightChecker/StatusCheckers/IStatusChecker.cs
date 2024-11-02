@@ -1,21 +1,19 @@
-﻿using System.IO.Ports;
-using System.Windows.Automation;
-using System.Windows.Media;
-using Serilog;
-using TeamsStatusChecker.Enumerations;
+﻿using System.Windows.Media;
+using FlaUI.Core.AutomationElements;
 
-namespace TeamsStatusChecker.StatusCheckers;
+namespace StatusLightChecker.StatusCheckers;
 
 internal interface IStatusChecker :IDisposable
 {
-    bool NamePropertyContains(AutomationElement element, string value);
-    Task<AutomationElement?> FindWindowAsync();
+    public AutomationElement? FindWindow();
     SolidColorBrush GetColorFromStatus();
 
     Task GetCurrentStatus();
 
     void StartChecking();
     void StopChecking();
+    
+    void InitializeTimer();
 
 
 }

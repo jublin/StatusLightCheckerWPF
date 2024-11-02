@@ -1,15 +1,33 @@
-﻿using System.Windows.Automation;
-using System.Windows.Media;
+﻿using System.Windows.Media;
+using FlaUI.Core.AutomationElements;
+using FlaUI.UIA3;
 using Serilog;
-using TeamsStatusChecker.Enumerations;
+using StatusLightChecker.Enumerations;
 
-namespace TeamsStatusChecker.StatusCheckers;
+namespace StatusLightChecker.StatusCheckers;
 
 public class TeamsApplicationStatusChecker(ILogger logger, StatusChangedEventHandler statusChangedEvent)
     : StatusCheckerBase<MicrosoftTeamsStatus>(ApplicationCheck.MicrosoftTeams, logger, "Microsoft Teams",
         statusChangedEvent,
         MicrosoftTeamsStatus.Unknown)
 {
+    private const string StatusButtonId = "idna-me-control-avatar-trigger";
+    public static AutomationElement? FindButtonById(string buttonId)
+    {
+        using var automation = new UIA3Automation();
+        var desktop = automation.GetDesktop();
+        var buttons = desktop.FindAllChildren(cf => cf.ByControlType(FlaUI.Core.Definitions.ControlType.Button));
+
+        foreach (var button in buttons)
+        {
+            if (button.AutomationId.Equals(buttonId, StringComparison.OrdinalIgnoreCase))
+            {
+                return button;
+            }
+        }
+
+        return null;
+    }
     public override async Task GetCurrentStatus()
     {
         var canEnter = await StatusCheckSemaphore.WaitAsync(1000);
@@ -27,7 +45,7 @@ public class TeamsApplicationStatusChecker(ILogger logger, StatusChangedEventHan
                 try
                 {
                     // Try to access a property to check if it's still valid
-                    var cachedWindowName = StoredWindow.Current.Name;
+                    var cachedWindowName = StoredWindow.Name;
                 }
                 catch
                 {
@@ -38,40 +56,32 @@ public class TeamsApplicationStatusChecker(ILogger logger, StatusChangedEventHan
 
             if (StoredWindow == null)
             {
-                StoredWindow = await FindWindowAsync();
+                StoredWindow = FindWindow();
                     
                 if (StoredWindow == null)
                 {
+                    Log.Error("StatusLightChecker - TeamsApplicationStatusChecker - Could not find Teams window");
                     LastStatus = MicrosoftTeamsStatus.Unknown;
                     return;
                 }
             }
+            var buttons = StoredWindow.FindAllDescendants(cf => cf.ByControlType(FlaUI.Core.Definitions.ControlType.Button));
 
-            // Look for the presence status element within the Teams window
-            var presenceElements = await Task.Run(() =>
+            var accountbutton = buttons.FirstOrDefault(b =>
+                b.AutomationId.Equals(StatusButtonId, StringComparison.OrdinalIgnoreCase));
+            if (accountbutton == null)
             {
-                var presenceCondition = new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Button);
-                return StoredWindow?.FindAll(TreeScope.Descendants, presenceCondition);
-            }, CancellationTokenSource.Token);
+                Log.Error("Couldn't find button holding status info.");
+                LastStatus = MicrosoftTeamsStatus.Unknown;
+                StatusChanged?.Invoke();
+                return;
+            }
 
-            if (presenceElements != null)
-                foreach (AutomationElement element in presenceElements)
-                {
-                    if(CancellationTokenSource.Token.IsCancellationRequested) return;
-                    
-                    Logger.Verbose($"presence element name found: {element.Current.Name}");
-                    if (StatusElementSubString != null && (string.IsNullOrEmpty(element.Current.Name) ||
-                                                           !element.Current.Name.Contains(StatusElementSubString)))
-                    {
-                        continue;
-                    }
-
-                    var statusWords = element.Current.Name.Split(' ');
-                    var status = statusWords.Skip(3).ToList();
-                    var forIndex = status.IndexOf("for");
-                    status = status.Take(forIndex).ToList();
-                    presenceStatus = string.Join(" ", status);
-                }
+            var statusWords = accountbutton.Name.Split(' ');
+            var status = statusWords.Skip(3).ToList();
+            var forIndex = status.IndexOf("for");
+            status = status.Take(forIndex).ToList();
+            presenceStatus = string.Join(" ", status);
         }
         catch (OperationCanceledException)
         {
@@ -79,16 +89,16 @@ public class TeamsApplicationStatusChecker(ILogger logger, StatusChangedEventHan
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "WindowsAutomation - Error reading status");
+            Logger.Error(ex, "- Error reading status");
         }
-        Logger.Information($"WindowsAutomation status found: {presenceStatus}");
+        Logger.Information($"Status found: {presenceStatus}");
 
         var newStatus = GetStatusFromElementStatus(presenceStatus);
         if (newStatus != LastStatus)
         {
             LastStatus = newStatus;
             StatusChanged?.Invoke();
-            Logger.Information($"WindowsAutomation status set to {LastStatus}");
+            Logger.Information($"status set to {LastStatus}");
         }
         StatusCheckSemaphore.Release();
     }

@@ -1,7 +1,6 @@
-﻿namespace TeamsStatusChecker.Enumerations;
+﻿namespace StatusLightChecker.Enumerations;
 
 public enum ApplicationCheck
 {
     MicrosoftTeams = 1,
-    // Slack,
 }

@@ -1,10 +1,10 @@
 ﻿using System.Windows;
 using System.Windows.Input;
-using TeamsStatusChecker.ViewModels;
+using StatusLightChecker.ViewModels;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
 
-namespace TeamsStatusChecker
+namespace StatusLightChecker
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml

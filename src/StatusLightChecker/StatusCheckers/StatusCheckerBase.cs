@@ -1,11 +1,11 @@
-﻿using System.Diagnostics;
-using System.Windows.Automation;
-using System.Windows.Media;
+﻿using System.Windows.Media;
 using System.Windows.Threading;
+using FlaUI.Core.AutomationElements;
+using FlaUI.UIA3;
 using Serilog;
-using TeamsStatusChecker.Enumerations;
+using StatusLightChecker.Enumerations;
 
-namespace TeamsStatusChecker.StatusCheckers;
+namespace StatusLightChecker.StatusCheckers;
 
 public abstract class StatusCheckerBase<T>(
     ApplicationCheck appToCheck,
@@ -19,8 +19,8 @@ public abstract class StatusCheckerBase<T>(
     public int PoolingIntervalSeconds { get; set; } = 5;
     protected AutomationElement? StoredWindow;
     public abstract Task GetCurrentStatus();
-    
-    private DispatcherTimer timer = new(TimeSpan.FromSeconds(5), DispatcherPriority.Background, StartTimerCallback , Dispatcher.CurrentDispatcher);
+
+    private DispatcherTimer statusTimer;
 
     public StatusChangedEventHandler StatusChanged { get; set; } = statusChangedEventHandler;
     
@@ -39,89 +39,44 @@ public abstract class StatusCheckerBase<T>(
     internal readonly SemaphoreSlim StatusCheckSemaphore = new(1, 1);
 
     private readonly SemaphoreSlim windowFinderSemaphore = new(1, 1);
-    
-    private static async void StartTimerCallback(object? sender, EventArgs e)
-    {
-        await ((IStatusChecker)sender)?.GetCurrentStatus()!;
-    }
 
-    public bool NamePropertyContains(AutomationElement element, string value)
-    {
-        try
-        {
-            var propertyValue = element.GetCurrentPropertyValue(AutomationElement.NameProperty) as string;
-            Debug.WriteLine(propertyValue);
-            return propertyValue != null && propertyValue.ToLowerInvariant().Contains(value.ToLowerInvariant());
-        }
-        catch (Exception e)
-        {
-            Debug.WriteLine(e);
-            return false;
-        }
-    }
 
     public async void StartChecking()
     {
         await GetCurrentStatus();
-        timer.Start();
+        InitializeTimer();
+        statusTimer.Start();
     }
     
     public async void StopChecking()
     {
         await CancellationTokenSource.CancelAsync();
-        timer.Stop();
+        statusTimer.Stop();
+        
     }
 
-    public virtual async Task<AutomationElement?> FindWindowAsync()
+    public void InitializeTimer()
     {
-        var canEnter = await windowFinderSemaphore.WaitAsync(1000);
-        if(!canEnter)
-        {
-            return StoredWindow;
-        }
-        AutomationElement? rootElement;
-        AutomationElement? foundWindow = null;
-
-        // Retry logic to handle timing issues
-        for (var i = 0; i < 5; i++)
-        {
-            try
-            {
-                rootElement = AutomationElement.RootElement;
-
-                var windows = await Task.Run(() => rootElement.FindAll(TreeScope.Children, Condition.TrueCondition),
-                    CancellationTokenSource.Token);
-
-                foreach (AutomationElement window in windows)
-                {
-                    if(window.GetCurrentPropertyValue(AutomationElement.NameProperty) == null)
-                        continue;
-                    
-                    if (!NamePropertyContains(window, WindowTitle))
-                        continue;
-                    foundWindow = window;
-                    break;
-                }
-
-                if (foundWindow != null)
-                {
-                    break;
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Error(ex, $"Error finding {Enum.GetName(typeof(ApplicationCheck), ApplicationToCheck)} window");
-            }
-            finally
-            {
-                windowFinderSemaphore.Release();
-            }
-
-            await Task.Delay(1000); // Wait for 1 second before retrying
-        }
-
-        return foundWindow;
+        statusTimer = new DispatcherTimer(TimeSpan.FromSeconds(PoolingIntervalSeconds), DispatcherPriority.Normal, StatusTimerCallback, Dispatcher.CurrentDispatcher);
     }
+
+    private async void StatusTimerCallback(object? sender, EventArgs e)
+    {
+        await GetCurrentStatus();
+        statusTimer.Start();
+    }
+
+
+    public AutomationElement? FindWindow()
+    {
+        using var automation = new UIA3Automation();
+        var desktop = automation.GetDesktop();
+        var windows = desktop.FindAllChildren(cf => cf.ByControlType(FlaUI.Core.Definitions.ControlType.Window));
+
+        return windows.FirstOrDefault(window => window.Name.Contains(WindowTitle, StringComparison.OrdinalIgnoreCase));
+    }
+
+    
 
     internal abstract T GetStatusFromElementStatus(string statusString);
 

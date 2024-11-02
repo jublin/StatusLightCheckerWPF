@@ -1,4 +1,4 @@
-﻿namespace TeamsStatusChecker.Enumerations
+﻿namespace StatusLightChecker.Enumerations
 {
     public enum MicrosoftTeamsStatus
     {
