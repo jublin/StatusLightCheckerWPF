@@ -3,7 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Microsoft.Expression.Interactivity.Core;
+using Microsoft.Xaml.Behaviors.Core;
 using RJCP.IO.Ports;
 using Serilog;
 using StatusLightChecker.Enumerations;
@@ -20,8 +20,6 @@ internal class MainViewModel : ObservableObject
     private TeamsApplicationStatusChecker? teamsApplicationStatusChecker;
     
     private readonly StatusChangedEventHandler statusChangedEventHandler;
-
-    private readonly DispatcherTimer timer;
 
     private MainViewModel()
     {
@@ -152,18 +150,14 @@ internal class MainViewModel : ObservableObject
     private SolidColorBrush? GetColorFromSelectedChecker()
     {
         var checker = GetChecker();
-        if (checker == null)
-        {
-            return new SolidColorBrush(Colors.Black);    
-        }
-        return checker?.GetColorFromStatus();
+        return checker == null ? new SolidColorBrush(Colors.Black) : checker?.GetColorFromStatus();
     }
     
     private async void StatusChangedEvent()
     {
         OnPropertyChanged(nameof(StatusColor));
         SerialPort?.DiscardOutBuffer();
-        var colorBytes = new[] { StatusColor.Color.R, StatusColor.Color.G, StatusColor.Color.B };
+        byte[] colorBytes = StatusColor == null ? [0, 0, 0] : [StatusColor.Color.R, StatusColor.Color.G, StatusColor.Color.B];
         await SerialPort?.WriteAsync(colorBytes, 0, colorBytes.Length)!;
         await SerialPort?.FlushAsync()!;
     }
