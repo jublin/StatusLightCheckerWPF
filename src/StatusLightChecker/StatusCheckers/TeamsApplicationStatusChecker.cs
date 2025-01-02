@@ -1,8 +1,10 @@
-﻿using System.Windows.Media;
+﻿using System.Drawing;
+using System.Windows.Media;
 using FlaUI.Core.AutomationElements;
 using FlaUI.UIA3;
 using Serilog;
 using StatusLightChecker.Enumerations;
+using Brushes = System.Windows.Media.Brushes;
 
 namespace StatusLightChecker.StatusCheckers;
 
@@ -11,7 +13,7 @@ public class TeamsApplicationStatusChecker(ILogger logger, StatusChangedEventHan
         statusChangedEvent,
         MicrosoftTeamsStatus.Unknown)
 {
-    private const string StatusButtonId = "idna-me-control-avatar-trigger";
+    public override string StatusButtonId { get; set; } = "idna-me-control-avatar-trigger";
     public static AutomationElement? FindButtonById(string buttonId)
     {
         using var automation = new UIA3Automation();
@@ -53,11 +55,9 @@ public class TeamsApplicationStatusChecker(ILogger logger, StatusChangedEventHan
                     StoredWindow = null;
                 }
             }
-
             if (StoredWindow == null)
             {
                 StoredWindow = FindWindow();
-                    
                 if (StoredWindow == null)
                 {
                     Log.Error("StatusLightChecker - TeamsApplicationStatusChecker - Could not find Teams window");
@@ -66,7 +66,6 @@ public class TeamsApplicationStatusChecker(ILogger logger, StatusChangedEventHan
                 }
             }
             var buttons = StoredWindow.FindAllDescendants(cf => cf.ByControlType(FlaUI.Core.Definitions.ControlType.Button));
-
             var accountbutton = buttons.FirstOrDefault(b =>
                 b.AutomationId.Equals(StatusButtonId, StringComparison.OrdinalIgnoreCase));
             if (accountbutton == null)
@@ -74,14 +73,22 @@ public class TeamsApplicationStatusChecker(ILogger logger, StatusChangedEventHan
                 Log.Error("Couldn't find button holding status info.");
                 LastStatus = MicrosoftTeamsStatus.Unknown;
                 StatusChanged?.Invoke();
-                return;
+                throw new Exception("Couldn't find button holding status info.");
             }
-
             var statusWords = accountbutton.Name.Split(' ');
             var status = statusWords.Skip(3).ToList();
             var forIndex = status.IndexOf("for");
             status = status.Take(forIndex).ToList();
             presenceStatus = string.Join(" ", status);
+            Logger.Information($"Status found: {presenceStatus}");
+
+            var newStatus = GetStatusFromElementStatus(presenceStatus);
+            if (newStatus != LastStatus)
+            {
+                LastStatus = newStatus;
+                StatusChanged?.Invoke();
+                Logger.Information($"status set to {LastStatus}");
+            }
         }
         catch (OperationCanceledException)
         {
@@ -91,16 +98,13 @@ public class TeamsApplicationStatusChecker(ILogger logger, StatusChangedEventHan
         {
             Logger.Error(ex, "- Error reading status");
         }
-        Logger.Information($"Status found: {presenceStatus}");
+        
+        finally
 
-        var newStatus = GetStatusFromElementStatus(presenceStatus);
-        if (newStatus != LastStatus)
         {
-            LastStatus = newStatus;
-            StatusChanged?.Invoke();
-            Logger.Information($"status set to {LastStatus}");
+            StatusCheckSemaphore.Release();
         }
-        StatusCheckSemaphore.Release();
+        
     }
 
     internal override MicrosoftTeamsStatus GetStatusFromElementStatus(string statusString)
@@ -111,6 +115,7 @@ public class TeamsApplicationStatusChecker(ILogger logger, StatusChangedEventHan
                 return MicrosoftTeamsStatus.Available;
             case "Busy":
             case "In a call":
+            case "In a meeting":
                 return MicrosoftTeamsStatus.Busy;
             case "Presenting":
             case "Do not disturb":
@@ -147,4 +152,9 @@ public class TeamsApplicationStatusChecker(ILogger logger, StatusChangedEventHan
                 return Brushes.Gray;
         }
     }
+
+    // private Icon IconFromStatus()
+    // {
+    //     return new Icon()
+    // }
 }

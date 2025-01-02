@@ -25,6 +25,10 @@ namespace StatusLightChecker
         private void LogBox_OnTextInput(object sender, TextCompositionEventArgs e)
         {
             LogBox.ScrollToEnd();
+            if (LogBox.Document.Blocks.Count > 200)
+            {
+                LogBox.Document.Blocks.Clear();
+            }
         }
     }
 }

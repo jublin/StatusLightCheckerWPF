@@ -119,8 +119,8 @@ internal class MainViewModel : ObservableObject
 
     private void DisconnectSerialPort()
     {
-        SerialPort?.Close();
         GetChecker()?.StopChecking();
+        SerialPort?.Close();
     }
 
     private void ConnectSerialPort()

@@ -5,6 +5,7 @@ namespace StatusLightChecker.StatusCheckers;
 
 internal interface IStatusChecker :IDisposable
 {
+    string StatusButtonId { get; set; }
     public AutomationElement? FindWindow();
     SolidColorBrush GetColorFromStatus();
 

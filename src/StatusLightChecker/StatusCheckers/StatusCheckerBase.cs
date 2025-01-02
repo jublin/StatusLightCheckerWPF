@@ -16,7 +16,8 @@ public abstract class StatusCheckerBase<T>(
     : IDisposable, IStatusChecker
     where T : Enum
 {
-    public int PoolingIntervalSeconds { get; set; } = 5;
+    public virtual string StatusButtonId { get; set; } = "status_button";
+    public int PoolingIntervalSeconds { get; set; } = 3;
     protected AutomationElement? StoredWindow;
     public abstract Task GetCurrentStatus();
 
@@ -43,16 +44,14 @@ public abstract class StatusCheckerBase<T>(
 
     public async void StartChecking()
     {
-        await GetCurrentStatus();
         InitializeTimer();
         statusTimer.Start();
     }
     
     public async void StopChecking()
     {
-        await CancellationTokenSource.CancelAsync();
         statusTimer.Stop();
-        
+        await CancellationTokenSource.CancelAsync();
     }
 
     public void InitializeTimer()
@@ -66,14 +65,39 @@ public abstract class StatusCheckerBase<T>(
         statusTimer.Start();
     }
 
-
-    public AutomationElement? FindWindow()
+    private List<AutomationElement>? FindWindows()
     {
         using var automation = new UIA3Automation();
         var desktop = automation.GetDesktop();
         var windows = desktop.FindAllChildren(cf => cf.ByControlType(FlaUI.Core.Definitions.ControlType.Window));
+        if (windows.Any(window => window.Name.Contains(WindowTitle, StringComparison.OrdinalIgnoreCase)))
+        {
+            return windows.Where(window => window.Name.Contains(WindowTitle, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
 
-        return windows.FirstOrDefault(window => window.Name.Contains(WindowTitle, StringComparison.OrdinalIgnoreCase));
+        return null;
+    }
+
+    public AutomationElement? FindWindow()
+    {
+        var foundWindows = FindWindows();
+        if (foundWindows == null || foundWindows.Count == 0)
+        {
+            return null;
+        }
+
+        if (foundWindows.Count > 1)
+        {
+            return (from window in foundWindows
+                let buttons =
+                    window.FindAllDescendants(cf => cf.ByControlType(FlaUI.Core.Definitions.ControlType.Button))
+                let accountbutton = buttons.FirstOrDefault(b =>
+                    b.AutomationId.Equals(StatusButtonId, StringComparison.OrdinalIgnoreCase))
+                select accountbutton).OfType<AutomationElement>().FirstOrDefault();
+        }
+
+        return foundWindows[0];
     }
 
     

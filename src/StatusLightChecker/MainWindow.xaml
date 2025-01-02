@@ -8,6 +8,7 @@
                  xmlns:enumerations="clr-namespace:StatusLightChecker.Enumerations"
                  xmlns:viewModels="clr-namespace:StatusLightChecker.ViewModels"
                  xmlns:utils="clr-namespace:StatusLightChecker.Utils"
+                 xmlns:tb="http://www.hardcodet.net/taskbar"
                  d:DesignHeight="450"
                  d:DesignWidth="800"  ShowInTaskbar="True"
                  Width="1100"
@@ -21,6 +22,19 @@
                  mc:Ignorable="d" 
                  Title="Busy Light Status Checker">
     
+    <!-- <tb:TaskbarIcon x:Name="myNotifyIcon" -->
+    <!--                 Visibility="Visible" -->
+    <!--                 ToolTipText="Fallback ToolTip for Windows xp" -->
+    <!--                 ContextMenu="{StaticResource TrayMenu}" -->
+    <!--                 MenuActivation="LeftOrRightClick" -->
+    <!--                 TrayPopup="{StaticResoure TrayStatusPopup}" -->
+    <!--                 PopupActivation="DoubleClick" -->
+    <!--                 TrayToolTip="{StaticResource TrayToolTip}" -->
+    <!-- > -->
+    <!--     <tb:TaskbarIcon.IconSource> -->
+    <!--          -->
+    <!--     </tb:TaskbarIcon.IconSource> -->
+    <!-- </tb:TaskbarIcon> -->
     <Window.Resources>
         <ObjectDataProvider x:Key="dataFromEnum" MethodName="GetValues"
                             ObjectType="{x:Type System:Enum}">
