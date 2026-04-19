@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+option csharp_namespace = "StatusLightChecker.Contracts";
+
+package settings;
+
+service SettingsService {
+  // Get current color configuration
+  rpc GetColorConfig (ColorConfigRequest) returns (ColorConfigResponse);
+  
+  // Update color configuration
+  rpc UpdateColorConfig (UpdateColorConfigRequest) returns (ColorConfigResponse);
+  
+  // Subscribe to color config changes
+  rpc StreamColorConfigUpdates (ColorConfigRequest) returns (stream ColorConfigResponse);
+}
+
+message ColorConfigRequest {
+  string clientId = 1;
+}
+
+message UpdateColorConfigRequest {
+  string clientId = 1;
+  ColorConfiguration config = 2;
+}
+
+message ColorConfiguration {
+  StatusColor available = 1;
+  StatusColor busy = 2;
+  StatusColor doNotDisturb = 3;
+  StatusColor away = 4;
+  StatusColor offline = 5;
+  StatusColor unknown = 6;
+}
+
+message StatusColor {
+  int32 statusLevel = 1;
+  string name = 2;
+  string hexColor = 3;
+  bool isBlinking = 4;
+}
+
+message ColorConfigResponse {
+  ColorConfiguration config = 1;
+  int64 lastUpdatedUnixMs = 2;
+  bool success = 3;
+  string errorMessage = 4;
+}

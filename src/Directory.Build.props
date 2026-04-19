@@ -1,0 +1,13 @@
+<Project>
+
+  <!-- Chain up to the repo-root Directory.Build.props for VersionPrefix -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <Company>Jublin.xyz</Company>
+    <AssemblyVersion>$(VersionPrefix)</AssemblyVersion>
+    <FileVersion>$(VersionPrefix)</FileVersion>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,53 @@
+<Project Sdk="WixToolset.Sdk/4.0.5">
+
+  <PropertyGroup>
+    <OutputName>StatusLightCheckerSetup</OutputName>
+    <Version>$(VersionPrefix)</Version>
+    <!-- Explicit output path so the CI artifact step has a known location -->
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <!--
+      Override these from CI to point at separate publish outputs:
+        /p:ClientPublishDir=...  /p:ServicePublishDir=...
+    -->
+    <ClientPublishDir Condition="'$(ClientPublishDir)' == ''">$(MSBuildThisFileDirectory)..\StatusLightChecker\bin\Release\net10.0-windows\win-x64\publish\</ClientPublishDir>
+    <ServicePublishDir Condition="'$(ServicePublishDir)' == ''">$(MSBuildThisFileDirectory)..\StatusLightChecker.Service\bin\Release\net10.0-windows\win-x64\publish\</ServicePublishDir>
+    <DefineConstants>ClientPublishDir=$(ClientPublishDir);ServicePublishDir=$(ServicePublishDir);InstallerVersion=$(Version)</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WixToolset.UI.wixext" />
+    <PackageReference Include="WixToolset.Util.wixext" />
+  </ItemGroup>
+
+  <!--
+    Harvest all client publish output into ClientDir.
+    ClientHarvest.xslt strips appsettings.Development.json.
+  -->
+  <ItemGroup>
+    <HarvestDirectory Include="$(ClientPublishDir)">
+      <ComponentGroupName>ClientBinaries</ComponentGroupName>
+      <DirectoryRefId>ClientDir</DirectoryRefId>
+      <SuppressCom>true</SuppressCom>
+      <SuppressRegistry>true</SuppressRegistry>
+      <SuppressRootDirectory>true</SuppressRootDirectory>
+      <Transforms>$(MSBuildThisFileDirectory)Transforms\ClientHarvest.xslt</Transforms>
+    </HarvestDirectory>
+  </ItemGroup>
+
+  <!--
+    Harvest all service publish output into ServiceDir.
+    ServiceHarvest.xslt strips appsettings.Development.json and injects
+    ServiceInstall/ServiceControl into the StatusLightChecker.Service.exe component.
+  -->
+  <ItemGroup>
+    <HarvestDirectory Include="$(ServicePublishDir)">
+      <ComponentGroupName>ServiceBinaries</ComponentGroupName>
+      <DirectoryRefId>ServiceDir</DirectoryRefId>
+      <SuppressCom>true</SuppressCom>
+      <SuppressRegistry>true</SuppressRegistry>
+      <SuppressRootDirectory>true</SuppressRootDirectory>
+      <Transforms>$(MSBuildThisFileDirectory)Transforms\ServiceHarvest.xslt</Transforms>
+    </HarvestDirectory>
+  </ItemGroup>
+
+</Project>

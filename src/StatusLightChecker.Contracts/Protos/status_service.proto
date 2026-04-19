@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+option csharp_namespace = "StatusLightChecker.Contracts";
+
+package statusservice;
+
+service StatusService {
+  // Stream status updates from service to client
+  rpc StreamStatusUpdates (StatusRequest) returns (stream StatusUpdate);
+  
+  // Get current status immediately
+  rpc GetCurrentStatus (StatusRequest) returns (StatusUpdate);
+  
+  // Get service health
+  rpc GetServiceHealth (HealthRequest) returns (HealthResponse);
+}
+
+message StatusRequest {
+  string clientId = 1;
+}
+
+message HealthRequest {
+  // Empty request
+}
+
+message StatusUpdate {
+  string statusId = 1;
+  string applicationName = 2;
+  string statusValue = 3;
+  string statusLabel = 4;
+  int32 statusLevel = 5;  // 0=Unknown, 1=Available, 2=Busy, 3=DoNotDisturb, 4=Away, 5=Offline
+  string colorHex = 6;
+  int64 timestampUnixMs = 7;
+  string details = 8;
+}
+
+message HealthResponse {
+  ServiceState state = 1;
+  string version = 2;
+  int64 uptimeSeconds = 3;
+  string message = 4;
+}
+
+enum ServiceState {
+  UNKNOWN = 0;
+  RUNNING = 1;
+  STOPPED = 2;
+  PAUSED = 3;
+  STARTING = 4;
+  STOPPING = 5;
+}

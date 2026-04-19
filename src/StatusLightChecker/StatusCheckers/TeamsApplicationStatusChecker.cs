@@ -1,9 +1,12 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.Windows.Media;
+using StatusLightChecker.Core.StatusCheckers;
 using FlaUI.Core.AutomationElements;
 using FlaUI.UIA3;
 using Serilog;
 using StatusLightChecker.Enumerations;
+using StatusLightChecker.ViewModels;
 using Brushes = System.Windows.Media.Brushes;
 
 namespace StatusLightChecker.StatusCheckers;

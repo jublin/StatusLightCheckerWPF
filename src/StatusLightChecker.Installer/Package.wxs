@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+
+  <Package Name="Status Light Checker"
+           Manufacturer="Jublin.xyz"
+           Version="$(var.InstallerVersion)"
+           UpgradeCode="E220399D-9D5E-4163-AB48-CABB103A67A1"
+           Scope="perUserOrMachine">
+
+    <!--
+      Elevation is always required because the Windows Service component needs it
+      regardless of per-user vs per-machine file placement.
+      Users must run the installer as administrator (right-click → Run as administrator).
+      The per-user/per-machine choice in WixUI_Advanced still controls where binaries
+      and config land; it just doesn't affect the elevation requirement.
+    -->
+<!--    <Condition Message="Installing Status Light Checker requires administrator privileges. The Windows Service component requires elevation regardless of install scope.">Privileged</Condition>-->
+
+    <!--
+      WixUI_Advanced enables per-user vs per-machine selection at install time.
+      WixAppFolder = "WixPerUserFolder" makes per-user the default.
+
+      Per-machine:  binaries → %ProgramFiles%\Jublin\StatusLightChecker\{Client,Service}\
+      Per-user:     binaries → %LocalAppData%\Apps\Jublin\StatusLightChecker\{Client,Service}\
+
+      appsettings.json is installed into the binary directory (harvested). Logs and the
+      SQLite DB are written at runtime by the service/client to %ProgramData% or
+      %LocalAppData% respectively; the installer does not create those directories.
+
+      NOTE: The service runs as LocalSystem because FlaUI uses UI Automation to read
+      the Teams window hierarchy. Lower-privilege accounts cannot access other
+      sessions' window trees. Revisit if the status-check mechanism changes.
+    -->
+    <Property Id="ApplicationFolderName" Value="Jublin\StatusLightChecker" />
+    <Property Id="WixAppFolder" Value="WixPerUserFolder" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Status Light Checker is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- ===== DIRECTORY TREE ===== -->
+
+    <!--
+      APPLICATIONFOLDER declared under ProgramFiles as per-machine default.
+      WixUI_Advanced re-parents it to LocalAppData\Apps for per-user installs.
+    -->
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="JublinInstallDir" Name="Jublin">
+        <Directory Id="APPLICATIONFOLDER" Name="StatusLightChecker">
+          <Directory Id="ClientDir" Name="Client" />
+          <Directory Id="ServiceDir" Name="Service" />
+        </Directory>
+      </Directory>
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="AppMenuFolder" Name="Status Light Checker" />
+    </StandardDirectory>
+
+    <!-- ===== COMPONENTS ===== -->
+
+    <!--
+      Start menu shortcut. Registry value is the KeyPath — file KeyPath shortcuts
+      are not valid for per-user installs under HKCU.
+    -->
+    <Component Id="AppShortcut" Directory="AppMenuFolder" Guid="*">
+      <RegistryValue Root="HKCU"
+                     Key="Software\Jublin\StatusLightChecker"
+                     Name="Installed"
+                     Type="integer"
+                     Value="1"
+                     KeyPath="yes" />
+      <Shortcut Id="StartMenuShortcut"
+                Name="Status Light Checker"
+                Description="Monitor and control your status light"
+                Target="[ClientDir]StatusLightChecker.exe"
+                WorkingDirectory="ClientDir" />
+      <RemoveFolder Id="RemoveAppMenuFolder" Directory="AppMenuFolder" On="uninstall" />
+    </Component>
+
+    <!-- ===== FEATURE ===== -->
+
+    <Feature Id="ProductFeature" Title="Status Light Checker" Level="1">
+      <!--
+        Harvested binaries include appsettings.json in their respective binary
+        directories (transforms only strip appsettings.Development.json and inject
+        ServiceInstall into the service exe component).
+      -->
+      <ComponentGroupRef Id="ClientBinaries" />
+      <ComponentGroupRef Id="ServiceBinaries" />
+      <ComponentRef Id="AppShortcut" />
+    </Feature>
+
+    <!-- ===== UI ===== -->
+
+    <ui:WixUI Id="WixUI_Advanced" />
+    <!--
+      To add a license screen, uncomment and provide an RTF file:
+      <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+    -->
+
+  </Package>
+</Wix>
