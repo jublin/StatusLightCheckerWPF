@@ -1,0 +1,219 @@
+<UserControl x:Class="StatusLightChecker.Views.SettingsDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:vm="clr-namespace:StatusLightChecker.ViewModels"
+             mc:Ignorable="d"
+             d:DesignHeight="600" d:DesignWidth="500">
+    
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,20">
+            <TextBlock Text="Status Color Configuration" 
+                      Style="{StaticResource MaterialDesignHeadline5TextBlock}"
+                      FontWeight="Bold"/>
+            <TextBlock Text="Customize the colors used for each status indicator" 
+                      Style="{StaticResource MaterialDesignBody2TextBlock}"
+                      Opacity="0.7"/>
+        </StackPanel>
+        
+        <!-- Color Configuration -->
+        <materialDesign:Card Grid.Row="1" 
+                              Style="{StaticResource MaterialDesignOutlinedCard}">
+            <ScrollViewer MaxHeight="400">
+                <StackPanel Margin="16">
+                    
+                    <!-- Available -->
+                    <Border Background="{DynamicResource MaterialDesignPaper}">
+                        <StackPanel Margin="8">
+                            <TextBlock Text="Available" 
+                                      Style="{StaticResource MaterialDesignSubtitle1TextBlock}">
+                                <TextBlock.Foreground>
+                                    <SolidColorBrush Color="{Binding Configuration.Available.HexColor, Converter={StaticResource HexToColorConverter}}"/>
+                                </TextBlock.Foreground>
+                            </TextBlock>
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <Rectangle Width="32" Height="32" 
+                                          Fill="{Binding Configuration.Available.ColorBrush}">
+                                    <Rectangle.RadiusX>8</Rectangle.RadiusX>
+                                    <Rectangle.RadiusY>8</Rectangle.RadiusY>
+                                </Rectangle>
+                                <TextBox Text="{Binding Configuration.Available.HexColor, UpdateSourceTrigger=PropertyChanged}"
+                                          Width="120" Margin="16,0,0,0"
+                                          materialDesign:TextFieldAssist.UnderlineBrush="{DynamicResource PrimaryHueMidBrush}">
+                                </TextBox>
+                                <CheckBox Content="Blink" 
+                                          IsChecked="{Binding Configuration.Available.IsBlinking}"
+                                          Margin="16,0,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Busy -->
+                    <Border Background="{DynamicResource MaterialDesignPaper}">
+                        <StackPanel Margin="8">
+                            <TextBlock Text="Busy" 
+                                      Style="{StaticResource MaterialDesignSubtitle1TextBlock}">
+                                <TextBlock.Foreground>
+                                    <SolidColorBrush Color="{Binding Configuration.Busy.HexColor, Converter={StaticResource HexToColorConverter}}"/>
+                                </TextBlock.Foreground>
+                            </TextBlock>
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <Rectangle Width="32" Height="32" 
+                                          Fill="{Binding Configuration.Busy.ColorBrush}">
+                                    <Rectangle.RadiusX>8</Rectangle.RadiusX>
+                                    <Rectangle.RadiusY>8</Rectangle.RadiusY>
+                                </Rectangle>
+                                <TextBox Text="{Binding Configuration.Busy.HexColor, UpdateSourceTrigger=PropertyChanged}"
+                                          Width="120" Margin="16,0,0,0">
+                                </TextBox>
+                                <CheckBox Content="Blink" 
+                                          IsChecked="{Binding Configuration.Busy.IsBlinking}"
+                                          Margin="16,0,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Do Not Disturb -->
+                    <Border Background="{DynamicResource MaterialDesignPaper}">
+                        <StackPanel Margin="8">
+                            <TextBlock Text="Do Not Disturb" 
+                                      Style="{StaticResource MaterialDesignSubtitle1TextBlock}">
+                                <TextBlock.Foreground>
+                                    <SolidColorBrush Color="{Binding Configuration.DoNotDisturb.HexColor, Converter={StaticResource HexToColorConverter}}"/>
+                                </TextBlock.Foreground>
+                            </TextBlock>
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <Rectangle Width="32" Height="32" 
+                                          Fill="{Binding Configuration.DoNotDisturb.ColorBrush}">
+                                    <Rectangle.RadiusX>8</Rectangle.RadiusX>
+                                    <Rectangle.RadiusY>8</Rectangle.RadiusY>
+                                </Rectangle>
+                                <TextBox Text="{Binding Configuration.DoNotDisturb.HexColor, UpdateSourceTrigger=PropertyChanged}"
+                                          Width="120" Margin="16,0,0,0">
+                                </TextBox>
+                                <CheckBox Content="Blink" 
+                                          IsChecked="{Binding Configuration.DoNotDisturb.IsBlinking}"
+                                          Margin="16,0,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Away -->
+                    <Border Background="{DynamicResource MaterialDesignPaper}">
+                        <StackPanel Margin="8">
+                            <TextBlock Text="Away" 
+                                      Style="{StaticResource MaterialDesignSubtitle1TextBlock}">
+                                <TextBlock.Foreground>
+                                    <SolidColorBrush Color="{Binding Configuration.Away.HexColor, Converter={StaticResource HexToColorConverter}}"/>
+                                </TextBlock.Foreground>
+                            </TextBlock>
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <Rectangle Width="32" Height="32" 
+                                          Fill="{Binding Configuration.Away.ColorBrush}">
+                                    <Rectangle.RadiusX>8</Rectangle.RadiusX>
+                                    <Rectangle.RadiusY>8</Rectangle.RadiusY>
+                                </Rectangle>
+                                <TextBox Text="{Binding Configuration.Away.HexColor, UpdateSourceTrigger=PropertyChanged}"
+                                          Width="120" Margin="16,0,0,0">
+                                </TextBox>
+                                <CheckBox Content="Blink" 
+                                          IsChecked="{Binding Configuration.Away.IsBlinking}"
+                                          Margin="16,0,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Offline -->
+                    <Border Background="{DynamicResource MaterialDesignPaper}">
+                        <StackPanel Margin="8">
+                            <TextBlock Text="Offline" 
+                                      Style="{StaticResource MaterialDesignSubtitle1TextBlock}">
+                                <TextBlock.Foreground>
+                                    <SolidColorBrush Color="{Binding Configuration.Offline.HexColor, Converter={StaticResource HexToColorConverter}}"/>
+                                </TextBlock.Foreground>
+                            </TextBlock>
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <Rectangle Width="32" Height="32" 
+                                          Fill="{Binding Configuration.Offline.ColorBrush}">
+                                    <Rectangle.RadiusX>8</Rectangle.RadiusX>
+                                    <Rectangle.RadiusY>8</Rectangle.RadiusY>
+                                </Rectangle>
+                                <TextBox Text="{Binding Configuration.Offline.HexColor, UpdateSourceTrigger=PropertyChanged}"
+                                          Width="120" Margin="16,0,0,0">
+                                </TextBox>
+                                <CheckBox Content="Blink" 
+                                          IsChecked="{Binding Configuration.Offline.IsBlinking}"
+                                          Margin="16,0,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Unknown -->
+                    <Border Background="{DynamicResource MaterialDesignPaper}">
+                        <StackPanel Margin="8">
+                            <TextBlock Text="Unknown" 
+                                      Style="{StaticResource MaterialDesignSubtitle1TextBlock}">
+                                <TextBlock.Foreground>
+                                    <SolidColorBrush Color="{Binding Configuration.Unknown.HexColor, Converter={StaticResource HexToColorConverter}}"/>
+                                </TextBlock.Foreground>
+                            </TextBlock>
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <Rectangle Width="32" Height="32" 
+                                          Fill="{Binding Configuration.Unknown.ColorBrush}">
+                                    <Rectangle.RadiusX>8</Rectangle.RadiusX>
+                                    <Rectangle.RadiusY>8</Rectangle.RadiusY>
+                                </Rectangle>
+                                <TextBox Text="{Binding Configuration.Unknown.HexColor, UpdateSourceTrigger=PropertyChanged}"
+                                          Width="120" Margin="16,0,0,0">
+                                </TextBox>
+                                <CheckBox Content="Blink" 
+                                          IsChecked="{Binding Configuration.Unknown.IsBlinking}"
+                                          Margin="16,0,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+            </ScrollViewer>
+        </materialDesign:Card>
+
+        <!-- Status Message -->
+        <TextBlock Grid.Row="2" 
+                    Text="{Binding StatusMessage}"
+                    Foreground="{DynamicResource SecondaryHueMidBrush}"
+                    Margin="0,16,0,8"/>
+        
+        <!-- Buttons -->
+        <StackPanel Grid.Row="3" 
+                      Orientation="Horizontal" 
+                      HorizontalAlignment="Right">
+            <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Content="RESET"
+                    Command="{Binding ResetToDefaultsCommand}"
+                    Margin="0,0,8,0"/>
+            
+            <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Content="CANCEL"
+                    Command="{Binding CloseDialogCommand}"
+                    Margin="0,0,8,0"/>
+            
+            <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                    Content="SAVE"
+                    Command="{Binding SaveConfigurationCommand}"
+                    IsEnabled="{Binding IsSaving, Converter={StaticResource InverseBooleanConverter}}">
+                <Button.IsDefault>True</Button.IsDefault>
+            </Button>
+        </StackPanel>
+        
+    </Grid>
+</UserControl>

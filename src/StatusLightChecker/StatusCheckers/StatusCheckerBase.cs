@@ -1,9 +1,14 @@
-﻿using System.Windows.Media;
+﻿using System;
+using System.Windows.Media;
 using System.Windows.Threading;
+using System;
+using StatusLightChecker.Core.Models;
+using StatusLightChecker.Core.StatusCheckers;
 using FlaUI.Core.AutomationElements;
 using FlaUI.UIA3;
 using Serilog;
 using StatusLightChecker.Enumerations;
+using StatusLightChecker.ViewModels;
 
 namespace StatusLightChecker.StatusCheckers;
 
@@ -21,7 +26,7 @@ public abstract class StatusCheckerBase<T>(
     protected AutomationElement? StoredWindow;
     public abstract Task GetCurrentStatus();
 
-    private DispatcherTimer statusTimer;
+    private DispatcherTimer? statusTimer;
 
     public StatusChangedEventHandler StatusChanged { get; set; } = statusChangedEventHandler;
     
@@ -45,12 +50,12 @@ public abstract class StatusCheckerBase<T>(
     public async void StartChecking()
     {
         InitializeTimer();
-        statusTimer.Start();
+        statusTimer?.Start();
     }
     
     public async void StopChecking()
     {
-        statusTimer.Stop();
+        statusTimer?.Stop();
         await CancellationTokenSource.CancelAsync();
     }
 
@@ -62,7 +67,7 @@ public abstract class StatusCheckerBase<T>(
     private async void StatusTimerCallback(object? sender, EventArgs e)
     {
         await GetCurrentStatus();
-        statusTimer.Start();
+        statusTimer?.Start();
     }
 
     private List<AutomationElement>? FindWindows()

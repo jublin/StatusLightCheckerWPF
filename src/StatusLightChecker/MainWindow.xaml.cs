@@ -1,34 +1,24 @@
-﻿using System.Windows;
-using System.Windows.Input;
+using Microsoft.Extensions.DependencyInjection;
 using StatusLightChecker.ViewModels;
-using Wpf.Ui.Appearance;
-using Wpf.Ui.Controls;
+using System.Windows;
+using System.ComponentModel;
 
-namespace StatusLightChecker
+namespace StatusLightChecker;
+
+public partial class MainWindow : Window
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
-    public partial class MainWindow : Window
+    public MainWindow()
     {
-        public MainWindow()
-        {
-            InitializeComponent();
-            ApplicationThemeManager.Apply(
-                ApplicationTheme.Dark, // Theme type
-                WindowBackdropType.Acrylic,  // Background type
-                true                                      // Whether to change accents automatically
-            );
-            DataContext = MainViewModel.Instance;
-        }
+        InitializeComponent();
+        DataContext = App.ServiceProvider.GetRequiredService<MainViewModel>();
+    }
 
-        private void LogBox_OnTextInput(object sender, TextCompositionEventArgs e)
+    protected override void OnClosing(CancelEventArgs e)
+    {
+        if (DataContext is MainViewModel vm)
         {
-            LogBox.ScrollToEnd();
-            if (LogBox.Document.Blocks.Count > 200)
-            {
-                LogBox.Document.Blocks.Clear();
-            }
+            vm.Dispose();
         }
+        base.OnClosing(e);
     }
 }

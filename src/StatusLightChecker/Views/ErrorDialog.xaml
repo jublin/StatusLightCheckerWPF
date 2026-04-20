@@ -1,0 +1,42 @@
+<UserControl x:Class="StatusLightChecker.Views.ErrorDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d">
+    
+    <Grid Margin="20" MinWidth="300">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Icon -->
+        <materialDesign:PackIcon Grid.Row="0"
+                                  Kind="AlertCircle"
+                                  Width="48" Height="48"
+                                  HorizontalAlignment="Center"
+                                  Foreground="{DynamicResource ErrorHueMidBrush}">
+        </materialDesign:PackIcon>
+        
+        <!-- Message -->
+        <TextBlock Grid.Row="1"
+                  Text="{Binding Message, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                  Style="{StaticResource MaterialDesignBody1TextBlock}"
+                  TextAlignment="Center"
+                  TextWrapping="Wrap"
+                  Margin="0,16,0,16"/>
+        
+        <!-- Button -->
+        <Button Grid.Row="2"
+                Style="{StaticResource MaterialDesignRaisedButton}"
+                Content="OK"
+                HorizontalAlignment="Center"
+                Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}">
+            <Button.IsDefault>True</Button.IsDefault>
+        </Button>
+        
+    </Grid>
+</UserControl>

@@ -1,0 +1,18 @@
+<Project>
+
+  <!-- Chain up to the repo-root Directory.Build.props for VersionPrefix -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <Company>Jublin.xyz</Company>
+    <AssemblyVersion>$(VersionPrefix)</AssemblyVersion>
+    <FileVersion>$(VersionPrefix)</FileVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <RepoRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)../'))</RepoRoot>
+    <BaseIntermediateOutputPath>$(RepoRoot)build\obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <BaseOutputPath>$(RepoRoot)build\bin\$(MSBuildProjectName)\</BaseOutputPath>
+  </PropertyGroup>
+
+</Project>
