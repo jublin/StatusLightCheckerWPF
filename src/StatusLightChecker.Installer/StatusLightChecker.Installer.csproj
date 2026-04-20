@@ -1,0 +1,59 @@
+<Project Sdk="Microsoft.Build.NoTargets/3.7.56">
+
+  <!--
+    This project produces no assembly. It publishes the client and service, then
+    compiles them into an Inno Setup installer via ISCC.exe.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Tools.InnoSetup" GeneratePathProperty="true" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <!--
+      ISCC.exe resolution order:
+        1. Explicit $(IsccExe) override (e.g. from CI: /p:IsccExe=...)
+        2. NuGet package path (Tools.InnoSetup)
+        3. Standard Windows install location (present on GitHub Actions windows-latest)
+        4. ISCC on PATH (local dev with Inno Setup installed)
+    -->
+    <IsccExe Condition="'$(IsccExe)' == '' and '$(PkgTools_InnoSetup)' != ''">$(PkgTools_InnoSetup)\tools\ISCC.exe</IsccExe>
+    <IsccExe Condition="'$(IsccExe)' == '' and Exists('C:\Program Files (x86)\Inno Setup 6\ISCC.exe')">C:\Program Files (x86)\Inno Setup 6\ISCC.exe</IsccExe>
+    <IsccExe Condition="'$(IsccExe)' == ''">ISCC.exe</IsccExe>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <ClientPublishDir Condition="'$(ClientPublishDir)' == ''">$(MSBuildThisFileDirectory)..\..\build\bin\StatusLightChecker\$(Configuration)\net10.0-windows\win-x64\publish\</ClientPublishDir>
+    <ServicePublishDir Condition="'$(ServicePublishDir)' == ''">$(MSBuildThisFileDirectory)..\..\build\bin\StatusLightChecker.Service\$(Configuration)\net10.0-windows\win-x64\publish\</ServicePublishDir>
+    <InstallerOutputDir>$(BaseOutputPath)$(Configuration)\</InstallerOutputDir>
+  </PropertyGroup>
+
+  <!--
+    Publish both projects before building the installer when output dirs don't yet exist.
+    CI pre-publishes with explicit /p:ClientPublishDir and /p:ServicePublishDir overrides,
+    so this block is skipped there.
+  -->
+  <ItemGroup Condition="!Exists('$(ClientPublishDir)') or !Exists('$(ServicePublishDir)')">
+    <ProjectReference Include="..\StatusLightChecker\StatusLightChecker.csproj">
+      <Targets>Publish</Targets>
+      <Properties>Configuration=$(Configuration);RuntimeIdentifier=win-x64;SelfContained=true;TargetFramework=net10.0-windows;PublishDir=$(ClientPublishDir)</Properties>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <SkipGetTargetFrameworkProperties>true</SkipGetTargetFrameworkProperties>
+    </ProjectReference>
+    <ProjectReference Include="..\StatusLightChecker.Service\StatusLightChecker.Service.csproj">
+      <Targets>Publish</Targets>
+      <Properties>Configuration=$(Configuration);RuntimeIdentifier=win-x64;SelfContained=true;TargetFramework=net10.0-windows;PublishDir=$(ServicePublishDir)</Properties>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <SkipGetTargetFrameworkProperties>true</SkipGetTargetFrameworkProperties>
+    </ProjectReference>
+  </ItemGroup>
+
+  <Target Name="CompileInstaller" AfterTargets="Build">
+    <MakeDir Directories="$(InstallerOutputDir)" />
+    <Exec Command="&quot;$(IsccExe)&quot; /DAppVersion=&quot;$(VersionPrefix)&quot; /DClientPublishDir=&quot;$(ClientPublishDir.TrimEnd('\'))&quot; /DServicePublishDir=&quot;$(ServicePublishDir.TrimEnd('\'))&quot; /DOutputDir=&quot;$(InstallerOutputDir.TrimEnd('\'))&quot; &quot;$(MSBuildThisFileDirectory)StatusLightCheckerSetup.iss&quot;" />
+  </Target>
+
+</Project>

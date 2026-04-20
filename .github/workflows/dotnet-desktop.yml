@@ -10,13 +10,15 @@ env:
   Solution_Name: src/StatusLightChecker.sln
   Client_Project: src/StatusLightChecker/StatusLightChecker.csproj
   Service_Project: src/StatusLightChecker.Service/StatusLightChecker.Service.csproj
-  Installer_Project: src/StatusLightChecker.Installer/StatusLightChecker.Installer.wixproj
+  Installer_Project: src/StatusLightChecker.Installer/StatusLightChecker.Installer.csproj
   Client_Publish_Dir: publish/client
   Service_Publish_Dir: publish/service
 
 jobs:
   build:
     runs-on: windows-latest
+    # windows-latest has Inno Setup 6 pre-installed at
+    # C:\Program Files (x86)\Inno Setup 6\ISCC.exe — no extra install step needed.
 
     steps:
     - name: Checkout
@@ -29,13 +31,11 @@ jobs:
       with:
         dotnet-version: 10.0.x
 
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v2
-
     - name: Restore solution
-      run: msbuild $env:Solution_Name /t:Restore /p:Configuration=Release
+      run: dotnet restore $env:Solution_Name
 
-    # Publish client and service separately — the installer needs distinct output dirs
+    # Publish client and service into separate dirs — the installer csproj reads these
+    # via /p:ClientPublishDir and /p:ServicePublishDir overrides below.
     - name: Publish client
       run: >
         dotnet publish $env:Client_Project
@@ -48,15 +48,15 @@ jobs:
         -c Release -f net10.0-windows -r win-x64 --self-contained true
         -o $env:Service_Publish_Dir
 
-    - name: Build MSI installer
+    - name: Build installer
       run: >
-        msbuild $env:Installer_Project
-        /p:Configuration=Release
+        dotnet build $env:Installer_Project
+        -c Release
         /p:ClientPublishDir=${{ github.workspace }}\${{ env.Client_Publish_Dir }}\
         /p:ServicePublishDir=${{ github.workspace }}\${{ env.Service_Publish_Dir }}\
 
-    - name: Upload MSI
+    - name: Upload installer
       uses: actions/upload-artifact@v4
       with:
         name: StatusLightCheckerSetup
-        path: src/StatusLightChecker.Installer/bin/Release/StatusLightCheckerSetup.msi
+        path: build/bin/StatusLightChecker.Installer/Release/StatusLightCheckerSetup.exe

@@ -10,7 +10,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StatusLightChecker.Service"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StatusLightChecker.Contracts", "StatusLightChecker.Contracts\StatusLightChecker.Contracts.csproj", "{C3D4E5F6-A7B8-9012-CDEF-345678901234}"
 EndProject
-Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "StatusLightChecker.Installer", "StatusLightChecker.Installer\StatusLightChecker.Installer.wixproj", "{9EC27587-AC73-405F-9A4D-BB402E13DC1E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StatusLightChecker.Installer", "StatusLightChecker.Installer\StatusLightChecker.Installer.csproj", "{9EC27587-AC73-405F-9A4D-BB402E13DC1E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
