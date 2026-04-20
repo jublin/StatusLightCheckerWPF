@@ -8,8 +8,7 @@
     <UseWPF>true</UseWPF>
     <EnableWPFDesignerSupport>false</EnableWPFDesignerSupport>
     <ApplicationIcon>icon.ico</ApplicationIcon>
-    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
-    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <UserSecretsId>statuslightchecker-wpf-2025</UserSecretsId>
   </PropertyGroup>
 

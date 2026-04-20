@@ -39,13 +39,13 @@ jobs:
     - name: Publish client
       run: >
         dotnet publish $env:Client_Project
-        -c Release -f net10.0-windows -r win-x64 --self-contained true
+        -c Release -f net10.0-windows -r win-x64 --self-contained false
         -o $env:Client_Publish_Dir
 
     - name: Publish service
       run: >
         dotnet publish $env:Service_Project
-        -c Release -f net10.0-windows -r win-x64 --self-contained true
+        -c Release -f net10.0-windows -r win-x64 --self-contained false
         -o $env:Service_Publish_Dir
 
     - name: Build installer

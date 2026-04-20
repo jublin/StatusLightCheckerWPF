@@ -39,13 +39,13 @@
   <ItemGroup Condition="!Exists('$(ClientPublishDir)') or !Exists('$(ServicePublishDir)')">
     <ProjectReference Include="..\StatusLightChecker\StatusLightChecker.csproj">
       <Targets>Publish</Targets>
-      <Properties>Configuration=$(Configuration);RuntimeIdentifier=win-x64;SelfContained=true;TargetFramework=net10.0-windows;PublishDir=$(ClientPublishDir)</Properties>
+      <Properties>Configuration=$(Configuration);RuntimeIdentifier=win-x64;SelfContained=false;TargetFramework=net10.0-windows;PublishDir=$(ClientPublishDir)</Properties>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <SkipGetTargetFrameworkProperties>true</SkipGetTargetFrameworkProperties>
     </ProjectReference>
     <ProjectReference Include="..\StatusLightChecker.Service\StatusLightChecker.Service.csproj">
       <Targets>Publish</Targets>
-      <Properties>Configuration=$(Configuration);RuntimeIdentifier=win-x64;SelfContained=true;TargetFramework=net10.0-windows;PublishDir=$(ServicePublishDir)</Properties>
+      <Properties>Configuration=$(Configuration);RuntimeIdentifier=win-x64;SelfContained=false;TargetFramework=net10.0-windows;PublishDir=$(ServicePublishDir)</Properties>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <SkipGetTargetFrameworkProperties>true</SkipGetTargetFrameworkProperties>
     </ProjectReference>

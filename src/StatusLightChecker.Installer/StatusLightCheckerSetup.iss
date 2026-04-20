@@ -177,6 +177,77 @@ begin
     Result := ExpandConstant('{userappdata}\Jublin\StatusLightChecker');
 end;
 
+{ Check registry for any installed .NET Desktop Runtime 10.x (64-bit). }
+function IsDotNetDesktopRuntimeInstalled: Boolean;
+const
+  RegKey = 'SOFTWARE\dotnet\Setup\InstalledVersions\x64\sharedfx\Microsoft.WindowsDesktop.App';
+var
+  Names: TArrayOfString;
+  I: Integer;
+begin
+  Result := False;
+  if RegGetValueNames(HKLM64, RegKey, Names) then
+    for I := 0 to High(Names) do
+      if Copy(Names[I], 1, 3) = '10.' then
+      begin
+        Result := True;
+        Break;
+      end;
+end;
+
+{ Download .NET Desktop Runtime 10 via PowerShell and install silently. }
+function DownloadAndInstallDotNet: Boolean;
+var
+  InstallerPath, PSArgs: String;
+  RC: Integer;
+begin
+  Result := False;
+  InstallerPath := ExpandConstant('{tmp}\windowsdesktop-runtime-10-x64.exe');
+
+  PSArgs := '-NoProfile -NonInteractive -Command ' +
+    '"Invoke-WebRequest -Uri ''https://aka.ms/dotnet/10.0/windowsdesktop-runtime-win-x64.exe''' +
+    ' -OutFile ''' + InstallerPath + '''"';
+
+  if not Exec('powershell.exe', PSArgs, '', SW_HIDE, ewWaitUntilTerminated, RC) or (RC <> 0) then
+  begin
+    MsgBox(
+      'Failed to download .NET Desktop Runtime 10.' + #13#10 +
+      'Please install it manually from https://dotnet.microsoft.com/download/dotnet/10.0' + #13#10 +
+      'then re-run this installer.',
+      mbError, MB_OK);
+    Exit;
+  end;
+
+  Exec(InstallerPath, '/install /quiet /norestart', '', SW_SHOW, ewWaitUntilTerminated, RC);
+  { RC=0: success; RC=3010: success, reboot required — both are fine. }
+  Result := (RC = 0) or (RC = 3010);
+  if not Result then
+    MsgBox(
+      '.NET Desktop Runtime 10 installer exited with code ' + IntToStr(RC) + '.' + #13#10 +
+      'Please install it manually and re-run this installer.',
+      mbError, MB_OK);
+end;
+
+{ Abort setup if .NET Desktop Runtime 10 is absent and user declines to install it. }
+function InitializeSetup: Boolean;
+begin
+  Result := True;
+  if IsDotNetDesktopRuntimeInstalled then
+    Exit;
+
+  if MsgBox(
+    '.NET Desktop Runtime 10.0 is required but was not found on this machine.' + #13#10 + #13#10 +
+    'Click OK to download and install it now (~55 MB),' + #13#10 +
+    'or Cancel to exit the installer.',
+    mbConfirmation, MB_OKCANCEL) <> IDOK then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  Result := DownloadAndInstallDotNet;
+end;
+
 { Warn the user if they chose non-admin install: service won't run. }
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
