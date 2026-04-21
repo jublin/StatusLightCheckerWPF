@@ -7,12 +7,18 @@ package settings;
 service SettingsService {
   // Get current color configuration
   rpc GetColorConfig (ColorConfigRequest) returns (ColorConfigResponse);
-  
+
   // Update color configuration
   rpc UpdateColorConfig (UpdateColorConfigRequest) returns (ColorConfigResponse);
-  
+
   // Subscribe to color config changes
   rpc StreamColorConfigUpdates (ColorConfigRequest) returns (stream ColorConfigResponse);
+
+  // Get serial port configuration
+  rpc GetSerialPortConfig (SerialPortConfigRequest) returns (SerialPortConfigResponse);
+
+  // Update serial port configuration
+  rpc UpdateSerialPortConfig (UpdateSerialPortConfigRequest) returns (SerialPortConfigResponse);
 }
 
 message ColorConfigRequest {
@@ -45,4 +51,24 @@ message ColorConfigResponse {
   int64 lastUpdatedUnixMs = 2;
   bool success = 3;
   string errorMessage = 4;
+}
+
+message SerialPortConfig {
+  string comPort = 1;
+  int32 baudRate = 2;
+}
+
+message SerialPortConfigRequest {
+  string clientId = 1;
+}
+
+message SerialPortConfigResponse {
+  SerialPortConfig config = 1;
+  bool success = 2;
+  string errorMessage = 3;
+}
+
+message UpdateSerialPortConfigRequest {
+  string clientId = 1;
+  SerialPortConfig config = 2;
 }

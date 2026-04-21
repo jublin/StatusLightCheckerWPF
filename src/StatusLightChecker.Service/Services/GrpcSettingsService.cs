@@ -11,14 +11,17 @@ public class GrpcSettingsService : global::StatusLightChecker.Contracts.Settings
 {
     private readonly ILogger<GrpcSettingsService> _logger;
     private readonly IColorConfigurationService _colorConfigService;
+    private readonly ISerialPortConfigurationService _serialPortConfigService;
     private readonly ConcurrentDictionary<string, IServerStreamWriter<ColorConfigResponse>> _activeStreams = new();
 
     public GrpcSettingsService(
         ILogger<GrpcSettingsService> logger,
-        IColorConfigurationService colorConfigService)
+        IColorConfigurationService colorConfigService,
+        ISerialPortConfigurationService serialPortConfigService)
     {
         _logger = logger;
         _colorConfigService = colorConfigService;
+        _serialPortConfigService = serialPortConfigService;
 
         _colorConfigService.ConfigurationChanged += OnConfigurationChanged;
     }
@@ -77,6 +80,54 @@ public class GrpcSettingsService : global::StatusLightChecker.Contracts.Settings
         finally
         {
             _activeStreams.TryRemove(request.ClientId, out _);
+        }
+    }
+
+    public override Task<SerialPortConfigResponse> GetSerialPortConfig(
+        SerialPortConfigRequest request,
+        ServerCallContext context)
+    {
+        _logger.LogDebug("GetSerialPortConfig called by {ClientId}", request.ClientId);
+
+        var config = _serialPortConfigService.GetCurrentConfiguration();
+        return Task.FromResult(new SerialPortConfigResponse
+        {
+            Config = new SerialPortConfig { ComPort = config.ComPort, BaudRate = config.BaudRate },
+            Success = true
+        });
+    }
+
+    public override async Task<SerialPortConfigResponse> UpdateSerialPortConfig(
+        UpdateSerialPortConfigRequest request,
+        ServerCallContext context)
+    {
+        _logger.LogInformation("UpdateSerialPortConfig called by {ClientId}", request.ClientId);
+
+        try
+        {
+            var config = new Core.Services.SerialPortConfiguration
+            {
+                ComPort = request.Config.ComPort,
+                BaudRate = request.Config.BaudRate
+            };
+            await _serialPortConfigService.UpdateConfigurationAsync(config);
+
+            return new SerialPortConfigResponse
+            {
+                Config = new SerialPortConfig { ComPort = config.ComPort, BaudRate = config.BaudRate },
+                Success = true
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update serial port configuration");
+            var current = _serialPortConfigService.GetCurrentConfiguration();
+            return new SerialPortConfigResponse
+            {
+                Config = new SerialPortConfig { ComPort = current.ComPort, BaudRate = current.BaudRate },
+                Success = false,
+                ErrorMessage = ex.Message
+            };
         }
     }
 

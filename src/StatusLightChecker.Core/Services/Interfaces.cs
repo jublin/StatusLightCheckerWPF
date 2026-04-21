@@ -9,6 +9,18 @@ public interface IColorConfigurationService
     event EventHandler<ColorConfigurationChangedEventArgs>? ConfigurationChanged;
 }
 
+public record SerialPortConfiguration
+{
+    public string ComPort { get; init; } = "COM3";
+    public int BaudRate { get; init; } = 115200;
+}
+
+public interface ISerialPortConfigurationService
+{
+    SerialPortConfiguration GetCurrentConfiguration();
+    Task UpdateConfigurationAsync(SerialPortConfiguration configuration);
+}
+
 public interface IStatusDetector
 {
     string ApplicationName { get; }
