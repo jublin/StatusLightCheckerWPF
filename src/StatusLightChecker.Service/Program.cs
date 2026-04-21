@@ -2,6 +2,7 @@ using Serilog;
 using StatusLightChecker.Core.Services;
 using StatusLightChecker.Service.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -55,6 +56,13 @@ builder.Services.AddSingleton<IColorConfigurationService>(sp =>
 {
     var logger = sp.GetRequiredService<ILogger<ColorConfigurationService>>();
     return new ColorConfigurationService(logger, dbConnectionString);
+});
+
+builder.Services.AddSingleton<ISerialPortConfigurationService>(sp =>
+{
+    var logger = sp.GetRequiredService<ILogger<SerialPortConfigurationService>>();
+    var config = sp.GetRequiredService<IConfiguration>();
+    return new SerialPortConfigurationService(logger, dbConnectionString, config);
 });
 
 builder.Services.AddSingleton<ServiceHealthTracker>();

@@ -107,6 +107,12 @@ public partial class SettingsViewModel : ObservableObject
     private ColorConfigurationViewModel _configuration;
 
     [ObservableProperty]
+    private string _comPort = "COM3";
+
+    [ObservableProperty]
+    private int _baudRate = 115200;
+
+    [ObservableProperty]
     private string _statusMessage = string.Empty;
 
     [ObservableProperty]
@@ -116,6 +122,18 @@ public partial class SettingsViewModel : ObservableObject
     {
         _grpcClient = grpcClient;
         Configuration = initialConfig;
+
+        _ = LoadSerialPortConfigAsync();
+    }
+
+    private async Task LoadSerialPortConfigAsync()
+    {
+        var result = await _grpcClient.GetSerialPortConfigAsync();
+        if (result.HasValue)
+        {
+            ComPort = result.Value.ComPort;
+            BaudRate = result.Value.BaudRate;
+        }
     }
 
     [RelayCommand]
@@ -127,17 +145,17 @@ public partial class SettingsViewModel : ObservableObject
             StatusMessage = "Saving...";
 
             var config = Configuration.ToConfiguration();
-            var success = await _grpcClient.UpdateColorConfigurationAsync(config);
+            var colorSuccess = await _grpcClient.UpdateColorConfigurationAsync(config);
+            var serialSuccess = await _grpcClient.UpdateSerialPortConfigAsync(ComPort, BaudRate);
 
-            if (success)
+            if (colorSuccess && serialSuccess)
             {
                 StatusMessage = "Settings saved successfully!";
-                // Apply the colors dynamically
                 await App.Current.Dispatcher.InvokeAsync(() => ApplyColorsToTheme(config));
             }
             else
             {
-                StatusMessage = "Failed to save settings.";
+                StatusMessage = "Failed to save one or more settings.";
             }
         }
         catch (Exception ex)

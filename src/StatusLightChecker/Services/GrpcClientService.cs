@@ -151,20 +151,59 @@ public class GrpcClientService : IDisposable
     public async Task<bool> UpdateColorConfigurationAsync(StatusLightChecker.Core.Models.ColorConfiguration config)
     {
         if (_settingsClient == null) return false;
-        
+
         try
         {
             var protoConfig = MapToProto(config);
-            var response = await _settingsClient.UpdateColorConfigAsync(new UpdateColorConfigRequest 
-            { 
-                ClientId = _clientId, 
-                Config = protoConfig 
+            var response = await _settingsClient.UpdateColorConfigAsync(new UpdateColorConfigRequest
+            {
+                ClientId = _clientId,
+                Config = protoConfig
             });
             return response.Success;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to update color configuration");
+            return false;
+        }
+    }
+
+    public async Task<(string ComPort, int BaudRate)?> GetSerialPortConfigAsync()
+    {
+        if (_settingsClient == null) return null;
+
+        try
+        {
+            var response = await _settingsClient.GetSerialPortConfigAsync(
+                new SerialPortConfigRequest { ClientId = _clientId });
+            if (response.Success)
+                return (response.Config.ComPort, response.Config.BaudRate);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get serial port configuration");
+        }
+        return null;
+    }
+
+    public async Task<bool> UpdateSerialPortConfigAsync(string comPort, int baudRate)
+    {
+        if (_settingsClient == null) return false;
+
+        try
+        {
+            var response = await _settingsClient.UpdateSerialPortConfigAsync(
+                new UpdateSerialPortConfigRequest
+                {
+                    ClientId = _clientId,
+                    Config = new SerialPortConfig { ComPort = comPort, BaudRate = baudRate }
+                });
+            return response.Success;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update serial port configuration");
             return false;
         }
     }
