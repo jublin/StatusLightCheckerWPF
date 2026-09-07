@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "targets": {
+    "portable-companion": {
+      "targetKind": "new-ui",
+      "projectId": "a1c72b5d-fe66-47e4-b1d2-5b5a49932550",
+      "activeDraftId": "088dba4d-27a2-4bf0-899b-f27285c597b0",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md",
+        ".superdesign/init/theme.md",
+        ".superdesign/init/routes.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "fc2cfebd0936ac0e928baed61fc71b6444d80b3ebab3718e0384f1143a2b3068",
+        ".superdesign/init/theme.md": "1da1c693c63d3f64828800527c44173c9557cb0b29218288ba279439ef4edcd3",
+        ".superdesign/init/routes.md": "46ce9f79cdc5f12e0119ed7851cdb5e1885d1ac3acccd7c9bc59e61f0b967ff0"
+      },
+      "components": [],
+      "drafts": {
+        "088dba4d-27a2-4bf0-899b-f27285c597b0": {
+          "title": "Status Light Companion",
+          "visualDirection": "Compact dark desktop utility with Light, Appearance, Settings tabs",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-09-07T03:29:17.335610+00:00"
+    }
+  }
+}
