@@ -2,16 +2,23 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
-    <TargetFramework Condition="$([MSBuild]::IsOSPlatform('Windows')) Or $(RuntimeIdentifier.StartsWith('win'))">net10.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>status-light</ToolCommandName>
+    <PackageId>StatusLightChecker.Companion</PackageId>
+    <PackageDescription>Portable status light companion with configurable presets and local Windows Teams presence detection.</PackageDescription>
+    <PackageTags>status-light;teams;presence;rp2040;avalonia</PackageTags>
+    <PackageReadmeFile>COMPANION.md</PackageReadmeFile>
+    <PackageOutputPath>$(RepoRoot)build\packages\</PackageOutputPath>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../StatusLightChecker.Companion/StatusLightChecker.Companion.csproj" />
     <PackageReference Include="Avalonia.Desktop" />
     <PackageReference Include="Avalonia.Themes.Fluent" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <PackageReference Include="FlaUI.UIA3" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)..\..\COMPANION.md" Pack="true" PackagePath="" />
   </ItemGroup>
 </Project>

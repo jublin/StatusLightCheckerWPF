@@ -2,9 +2,26 @@
 
 The new companion is `src/StatusLightChecker.Desktop`. It uses Avalonia for a portable desktop UI and shares its firmware protocol code with `StatusLightChecker.Companion`. The original WPF app and service remain available separately.
 
-## Run on Windows
+## Install as a .NET tool
 
-Extract the entire `StatusLightCompanion-win-x64.zip` and run `StatusLightChecker.Desktop.exe`. The self-contained package includes .NET; it does not need an administrator installer or a Teams tenant application registration. Company endpoint policies may still restrict applications or USB devices.
+The companion is distributed as a .NET tool, so it installs per user without an administrator installer. It requires the .NET 10 SDK/runtime and does not need a Teams tenant application registration. Company endpoint policies may still restrict applications or USB devices.
+
+From a published package source:
+
+```sh
+dotnet tool install --global StatusLightChecker.Companion
+status-light
+```
+
+To install a package built locally:
+
+```sh
+dotnet pack src/StatusLightChecker.Desktop -c Release -o build/packages
+dotnet tool install --tool-path .tools/status-light --add-source build/packages StatusLightChecker.Companion --version 2.0.0
+.tools/status-light/status-light
+```
+
+The tool targets portable `net10.0`. On Windows it enables local Teams accessibility detection at runtime; on macOS and Linux it provides manual status and all USB light configuration.
 
 1. Flash the configurable notifier firmware from TeamsLightRP2040. This app requires protocol version 1 at 57600 baud; the original raw-RGB firmware is incompatible.
 2. Close the old helper/service if it owns the light's serial port.
@@ -15,7 +32,7 @@ Extract the entire `StatusLightCompanion-win-x64.zip` and run `StatusLightChecke
 
 The timeout controls when firmware displays its Offline preset after updates stop; 0 disables it. A detected status that cannot be read displays **Status unavailable** and sends Offline in Automatic mode. Manual selection does not change your Teams presence. The on-screen orb illustrates the selected output; it is not a sensor reading and animation timing is approximate.
 
-**Minimize to tray** hides a minimized window; use the tray's **Show Status Light** menu to restore it. Closing the window or choosing **Quit** exits the app. Tray support on Linux depends on the desktop environment. Windows launch-at-sign-in uses the current user's startup registry entry and is opt-in; enable it from the published executable.
+**Minimize to tray** hides a minimized window; use the tray's **Show Status Light** menu to restore it. Closing the window or choosing **Quit** exits the app. Tray support on Linux depends on the desktop environment. Windows launch-at-sign-in uses the current user's startup registry entry and is opt-in; enable it from the installed tool's executable path.
 
 ## Presence limitations
 
@@ -31,11 +48,11 @@ With .NET 10 SDK:
 dotnet run --project src/StatusLightChecker.Desktop
 dotnet run --project tests/Companion.Checks/Companion.Checks.csproj
 dotnet run --project tests/Desktop.Checks/Desktop.Checks.csproj
-dotnet publish src/StatusLightChecker.Desktop -c Release -r win-x64 --self-contained true -o build/companion-win-x64
+dotnet pack src/StatusLightChecker.Desktop -c Release -o build/packages
 ```
 
-On Windows, the desktop project selects its Windows target and includes FlaUI. Passing `-r win-x64` also selects it when cross-building. Non-Windows targets exclude FlaUI. Cross-build other releases with `-r linux-x64`, `-r osx-arm64`, or the appropriate runtime identifier.
+The package contains one portable target. Windows-only Teams detection is selected at runtime, so the same tool package works across desktop platforms with a matching .NET 10 runtime.
 
 Checks cover configuration parsing/validation, bytewise reply framing and error handling, English presence labels, and rendered desktop controls (tabs, preset editing/defaults, and disconnected preview errors). Desktop checks can optionally write rendered screens by appending `-- /path/to/screens`.
 
-Verified in this development environment: portable checks, headless desktop controls, and Windows cross-publishing. Real Windows Teams detection, physical USB operation, startup, and tray behavior still require a Windows/device smoke test.
+Verified in this development environment: portable checks, headless desktop controls, tool packing, and local tool installation. Real Windows Teams detection, physical USB operation, startup, and tray behavior still require a Windows/device smoke test.

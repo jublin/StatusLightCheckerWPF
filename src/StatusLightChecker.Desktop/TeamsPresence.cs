@@ -6,7 +6,7 @@ internal static class TeamsPresence
 {
     public static string? Read()
     {
-#if WINDOWS
+        if (!OperatingSystem.IsWindows()) return null;
         using var automation = new FlaUI.UIA3.UIA3Automation();
         foreach (var process in System.Diagnostics.Process.GetProcessesByName("ms-teams"))
         {
@@ -18,7 +18,6 @@ internal static class TeamsPresence
                 if (button != null) return Presence.Parse(button.Name);
             }
         }
-#endif
         return null;
     }
 }
