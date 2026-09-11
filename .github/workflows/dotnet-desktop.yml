@@ -1,4 +1,4 @@
-name: .NET Core Desktop
+name: Status Light .NET tool
 
 on:
   push:
@@ -7,19 +7,12 @@ on:
     branches: [ "main" ]
 
 env:
-  Solution_Name: src/StatusLightChecker.sln
-  Client_Project: src/StatusLightChecker/StatusLightChecker.csproj
-  Service_Project: src/StatusLightChecker.Service/StatusLightChecker.Service.csproj
-  Installer_Project: src/StatusLightChecker.Installer/StatusLightChecker.Installer.csproj
-  Client_Publish_Dir: publish/client
-  Service_Publish_Dir: publish/service
+  Tool_Project: src/StatusLightChecker.Desktop/StatusLightChecker.Desktop.csproj
+  Tool_Package_Dir: build/packages
 
 jobs:
   build:
     runs-on: windows-latest
-    # windows-latest has Inno Setup 6 pre-installed at
-    # C:\Program Files (x86)\Inno Setup 6\ISCC.exe — no extra install step needed.
-
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -31,32 +24,28 @@ jobs:
       with:
         dotnet-version: 10.0.x
 
-    - name: Restore solution
-      run: dotnet restore $env:Solution_Name
+    - name: Restore tool
+      run: dotnet restore $env:Tool_Project
 
-    # Publish client and service into separate dirs — the installer csproj reads these
-    # via /p:ClientPublishDir and /p:ServicePublishDir overrides below.
-    - name: Publish client
-      run: >
-        dotnet publish $env:Client_Project
-        -c Release -f net10.0-windows -r win-x64 --self-contained true
-        -o $env:Client_Publish_Dir
+    - name: Restore checks
+      run: |
+        dotnet restore tests/Companion.Checks/Companion.Checks.csproj
+        dotnet restore tests/Desktop.Checks/Desktop.Checks.csproj
 
-    - name: Publish service
-      run: >
-        dotnet publish $env:Service_Project
-        -c Release -f net10.0-windows -r win-x64 --self-contained true
-        -o $env:Service_Publish_Dir
+    - name: Run protocol checks
+      run: dotnet run --project tests/Companion.Checks/Companion.Checks.csproj --no-restore
 
-    - name: Build installer
-      run: >
-        dotnet build $env:Installer_Project
-        -c Release
-        /p:ClientPublishDir=${{ github.workspace }}\${{ env.Client_Publish_Dir }}\
-        /p:ServicePublishDir=${{ github.workspace }}\${{ env.Service_Publish_Dir }}\
+    - name: Run desktop checks
+      run: dotnet run --project tests/Desktop.Checks/Desktop.Checks.csproj --no-restore
 
-    - name: Upload installer
+    - name: Pack .NET tool
+      run: dotnet pack $env:Tool_Project -c Release --no-restore -o $env:Tool_Package_Dir
+
+    - name: Validate tool package
+      run: dotnet tool install --tool-path .tool-test --add-source $env:Tool_Package_Dir StatusLightChecker.Companion --version 2.0.0 --ignore-failed-sources
+
+    - name: Upload .NET tool
       uses: actions/upload-artifact@v4
       with:
-        name: StatusLightCheckerSetup
-        path: build/bin/StatusLightChecker.Installer/Release/StatusLightCheckerSetup.exe
+        name: StatusLightChecker.Companion
+        path: build/packages/*.nupkg

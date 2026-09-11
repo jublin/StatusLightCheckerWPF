@@ -1,0 +1,28 @@
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Themes.Fluent;
+using Avalonia.Styling;
+
+namespace StatusLightChecker.Desktop;
+
+internal static class Program
+{
+    [STAThread]
+    public static void Main(string[] args) => AppBuilder.Configure<CompanionApp>().UsePlatformDetect().StartWithClassicDesktopLifetime(args);
+}
+
+public sealed class CompanionApp : Application
+{
+    public override void Initialize()
+    {
+        RequestedThemeVariant = ThemeVariant.Dark;
+        Styles.Add(new FluentTheme());
+    }
+    public override void OnFrameworkInitializationCompleted()
+    {
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            desktop.MainWindow = new MainWindow();
+        base.OnFrameworkInitializationCompleted();
+    }
+}
