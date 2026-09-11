@@ -5,6 +5,8 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  release:
+    types: [ published ]
 
 env:
   Tool_Project: src/StatusLightChecker.Desktop/StatusLightChecker.Desktop.csproj
@@ -32,6 +34,12 @@ jobs:
         dotnet restore tests/Companion.Checks/Companion.Checks.csproj
         dotnet restore tests/Desktop.Checks/Desktop.Checks.csproj
 
+    - name: Set package version
+      shell: pwsh
+      run: |
+        $version = if ($env:GITHUB_EVENT_NAME -eq 'release') { $env:GITHUB_REF_NAME -replace '^v', '' } else { '2.0.0' }
+        "Package_Version=$version" >> $env:GITHUB_ENV
+
     - name: Run protocol checks
       run: dotnet run --project tests/Companion.Checks/Companion.Checks.csproj --no-restore
 
@@ -39,10 +47,18 @@ jobs:
       run: dotnet run --project tests/Desktop.Checks/Desktop.Checks.csproj --no-restore
 
     - name: Pack .NET tool
-      run: dotnet pack $env:Tool_Project -c Release --no-restore -o $env:Tool_Package_Dir
+      run: dotnet pack $env:Tool_Project -c Release --no-restore -o $env:Tool_Package_Dir -p:PackageVersion=$env:Package_Version
 
     - name: Validate tool package
-      run: dotnet tool install --tool-path .tool-test --add-source $env:Tool_Package_Dir StatusLightChecker.Companion --version 2.0.0 --ignore-failed-sources
+      run: dotnet tool install --tool-path .tool-test --add-source $env:Tool_Package_Dir StatusLightChecker.Companion --version $env:Package_Version --ignore-failed-sources
+
+    - name: Publish .NET tool to NuGet
+      if: github.event_name == 'release' && github.event.action == 'published'
+      run: |
+        $package = Get-ChildItem "$env:Tool_Package_Dir/*.nupkg" | Select-Object -First 1
+        dotnet nuget push $package.FullName --api-key $env:NUGET_API_KEY --source https://api.nuget.org/v3/index.json --skip-duplicate
+      env:
+        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
 
     - name: Upload .NET tool
       uses: actions/upload-artifact@v4
