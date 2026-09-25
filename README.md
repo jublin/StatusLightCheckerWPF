@@ -1,4 +1,3 @@
-# TeamsStatusWPF
+# Status Light
 
-The new Windows-first, portable companion is documented in [COMPANION.md](COMPANION.md). It adds configurable light presets, effects, manual control, and a compact desktop interface.
-TeamsStatus fetcher basic wpf application
+The supported Avalonia app is documented in [COMPANION.md](COMPANION.md). It connects to the RP2040 light over USB serial. Run it with `dotnet run --project src/StatusLightChecker.Desktop`.

@@ -1,6 +1,6 @@
 # Status Light companion
 
-The new companion is `src/StatusLightChecker.Desktop`. It uses Avalonia for a portable desktop UI and shares its firmware protocol code with `StatusLightChecker.Companion`. The original WPF app and service remain available separately.
+The supported companion is `src/StatusLightChecker.Desktop`. It uses Avalonia for a portable desktop UI and shares its firmware protocol code with `StatusLightChecker.Companion`. Historical WPF and service sources remain in the repository but are excluded from the supported solution.
 
 ## Install as a .NET tool
 
